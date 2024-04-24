@@ -9,14 +9,15 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-const divisor = 4
+const divisor, buffer = 4, 4
 
 type Model struct {
-	focused Status
-	lists   []list.Model
-	loading spinner.Model
-	err     error
-	loaded  bool
+	focused  Status
+	lists    []list.Model
+	loading  spinner.Model
+	err      error
+	loaded   bool
+	quitting bool
 }
 
 func (m *Model) initSpinner() {
@@ -25,7 +26,7 @@ func (m *Model) initSpinner() {
 }
 
 func (m *Model) initLists(width, height int) {
-	defaultList := list.New([]list.Item{}, list.NewDefaultDelegate(), width/divisor, height-divisor)
+	defaultList := list.New([]list.Item{}, list.NewDefaultDelegate(), width/divisor, height-buffer)
 	defaultList.SetShowHelp(false)
 	m.lists = []list.Model{defaultList, defaultList, defaultList}
 
@@ -51,12 +52,33 @@ func (m Model) Init() tea.Cmd {
 	return m.loading.Tick
 }
 
+func (m *Model) Next() {
+	m.focused++
+	m.focused = m.focused.Wrap()
+}
+
+func (m *Model) Previous() {
+	m.focused--
+	m.focused = m.focused.Wrap()
+}
+
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
+		UpdateStyleWidths(msg.Width/divisor, msg.Height-buffer)
 		if !m.loaded {
 			m.initLists(msg.Width, msg.Height)
 			m.loaded = true
+		}
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c", "q":
+			m.quitting = true
+			return m, tea.Quit
+		case "left", "h":
+			m.Previous()
+		case "right", "l":
+			m.Next()
 		}
 	default:
 		m.initSpinner()
@@ -70,21 +92,30 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
+func (m Model) RenderList(e Status, s string) string {
+	switch {
+	case m.focused == e:
+		return FocusedStyle.Render(s)
+	default:
+		return ColumnStyle.Render(s)
+	}
+}
+
 func (m Model) View() string {
-	if !m.loaded {
+	switch {
+	case m.quitting:
+		return ""
+	case !m.loaded:
 		return fmt.Sprintf("\n\n   %s Loading...", m.loading.View())
-	} else {
+	default:
 		todoView := m.lists[todo].View()
 		inProgView := m.lists[inProgress].View()
 		doneView := m.lists[done].View()
-		switch m.focused {
-		default:
-			return lipgloss.JoinHorizontal(
-				lipgloss.Left,
-				FocusedStyle.Render(todoView),
-				ColumnStyle.Render(inProgView),
-				ColumnStyle.Render(doneView),
-			)
-		}
+		return lipgloss.JoinHorizontal(
+			lipgloss.Left,
+			m.RenderList(todo, todoView),
+			m.RenderList(inProgress, inProgView),
+			m.RenderList(done, doneView),
+		)
 	}
 }

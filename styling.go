@@ -1,6 +1,8 @@
 package main
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"github.com/charmbracelet/lipgloss"
+)
 
 var (
 	ColumnStyle = lipgloss.NewStyle().
@@ -12,3 +14,10 @@ var (
 	HelpStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("241"))
 )
+
+func UpdateStyleWidths(width, height int) {
+	ColumnStyle.Height(height)
+	ColumnStyle.Width(width)
+	FocusedStyle.Height(height)
+	FocusedStyle.Width(width)
+}

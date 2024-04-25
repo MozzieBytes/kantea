@@ -108,7 +108,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.RegressTask()
 		case "ctrl+right", "ctrl+l":
 			m.ProgressTask()
+		case "n":
+			ms = m // save the curent model state
+			return NewForm(m.focused).Update(nil)
 		}
+	case Task:
+		task := msg
+		return m, m.lists[task.status].InsertItem(len(m.lists[task.status].Items()), task)
 	default:
 		m.initSpinner()
 	}

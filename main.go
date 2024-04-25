@@ -7,9 +7,12 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// Model State
+var ms Model
+
 func main() {
-	m := Model{}
-	p := tea.NewProgram(m)
+	ms = Model{}
+	p := tea.NewProgram(ms)
 	if _, err := p.Run(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

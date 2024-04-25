@@ -8,12 +8,23 @@ const (
 	done
 )
 
-func (s Status) Wrap() Status {
+func (s Status) Progress() Status {
+	s++
+	return s.wrap()
+}
+
+func (s Status) Regress() Status {
+	s--
+	return s.wrap()
+}
+
+func (s Status) wrap() Status {
 	switch {
 	case s > done:
-		s = todo
+		return todo
 	case s < todo:
-		s = done
+		return done
+	default:
+		return s
 	}
-	return s
 }

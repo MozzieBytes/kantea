@@ -6,6 +6,16 @@ type Task struct {
 	description string
 }
 
+func (t *Task) Next() Task {
+	t.status = t.status.Progress()
+	return *t
+}
+
+func (t *Task) Previous() Task {
+	t.status = t.status.Regress()
+	return *t
+}
+
 func (t Task) FilterValue() string {
 	return t.title
 }

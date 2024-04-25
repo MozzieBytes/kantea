@@ -20,6 +20,33 @@ type Model struct {
 	quitting bool
 }
 
+func (m *Model) ProgressTask() tea.Msg {
+	return m.moveTask(func(t Task) Task {
+		return t.Next()
+	})
+}
+
+func (m *Model) RegressTask() tea.Msg {
+	return m.moveTask(func(t Task) Task {
+		return t.Previous()
+	})
+}
+
+func (m *Model) moveTask(f func(Task) Task) tea.Msg {
+	selectedItem := m.lists[m.focused].SelectedItem()
+	if selectedItem != nil {
+		selectedTask := selectedItem.(Task)
+		m.lists[selectedTask.status].RemoveItem(m.lists[m.focused].Index())
+		selectedTask = f(selectedTask)
+		fmt.Print(selectedTask.status)
+		m.lists[selectedTask.status].
+			InsertItem(
+				len(m.lists[selectedTask.status].Items())-1,
+				list.Item(selectedTask))
+	}
+	return nil
+}
+
 func (m *Model) initSpinner() {
 	m.loading = spinner.Model{}
 	m.loading.Spinner = spinner.Dot
@@ -53,13 +80,11 @@ func (m Model) Init() tea.Cmd {
 }
 
 func (m *Model) Next() {
-	m.focused++
-	m.focused = m.focused.Wrap()
+	m.focused = m.focused.Progress()
 }
 
 func (m *Model) Previous() {
-	m.focused--
-	m.focused = m.focused.Wrap()
+	m.focused = m.focused.Regress()
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -79,6 +104,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Previous()
 		case "right", "l":
 			m.Next()
+		case "ctrl+left", "ctrl+h":
+			m.RegressTask()
+		case "ctrl+right", "ctrl+l":
+			m.ProgressTask()
 		}
 	default:
 		m.initSpinner()

@@ -58,21 +58,8 @@ func (m *Model) initLists(width, height int) {
 	m.lists = []list.Model{defaultList, defaultList, defaultList}
 
 	m.lists[todo].Title = "To Do"
-	m.lists[todo].SetItems([]list.Item{
-		Task{status: todo, title: "buy milk", description: "strawberry milk"},
-		Task{status: todo, title: "eat sushi", description: "negitoro roll"},
-		Task{status: todo, title: "fold laundry", description: "or wear wrinkly shirts"},
-	})
-
 	m.lists[inProgress].Title = "In Progress"
-	m.lists[inProgress].SetItems([]list.Item{
-		Task{status: inProgress, title: "stay", description: "cool"},
-	})
-
 	m.lists[done].Title = "Done"
-	m.lists[done].SetItems([]list.Item{
-		Task{status: done, title: "dusted", description: "*clap hands*"},
-	})
 }
 
 func (m Model) Init() tea.Cmd {
